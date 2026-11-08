@@ -1,0 +1,51 @@
+<section class="orders-container">
+  <h1>I miei ordini</h1>
+
+  <ng-container *ngIf="orders$ | async as orders; else loading">
+    
+    <!-- Stato vuoto -->
+    <div *ngIf="orders.length === 0" class="empty-orders">
+      <mat-icon class="empty-icon">shopping_bag</mat-icon>
+      <p>Non hai ancora effettuato alcun ordine.</p>
+      <a mat-flat-button color="primary" routerLink="/products">
+        Sfoglia il catalogo
+      </a>
+    </div>
+
+    <!-- Lista ordini (Accordion/Panelli) -->
+    <mat-accordion *ngIf="orders.length > 0" class="orders-accordion" multi="false">
+      <mat-expansion-panel *ngFor="let order of orders">
+        
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <strong>Ordine #{{ order.id }}</strong>
+          </mat-panel-title>
+          <mat-panel-description>
+            <span>Stato: {{ order.stato }}</span>
+          </mat-panel-description>
+          <mat-panel-description>
+            <span>Totale: {{ order.totale | currency:'EUR' }}</span>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <!-- Dettaglio articoli dell'ordine -->
+        <div class="order-details">
+          <h3>Articoli acquistati</h3>
+          <ul class="items-list">
+            <li *ngFor="let item of order.items">
+              <span>Prodotto #{{ item.product_id }}</span>
+              <span>Quantità: {{ item.quantita }}</span>
+               <span>Prezzo unitario: {{ item.prezzo_unitario | currency:'EUR' }}</span>
+            </li>
+          </ul>
+        </div>
+
+      </mat-expansion-panel>
+    </mat-accordion>
+
+  </ng-container>
+
+  <ng-template #loading>
+    <p class="loading-state">Caricamento ordini in corso...</p>
+  </ng-template>
+</section>

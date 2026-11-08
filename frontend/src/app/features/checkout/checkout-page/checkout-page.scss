@@ -1,0 +1,20 @@
+.order-success {
+  background: #e6f4ea;
+  color: #1e4620;
+  border: 1px solid #a5d6a7;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.cart-summary {
+  position: relative;
+
+  .balance {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    font-size: 1rem;
+  }
+}

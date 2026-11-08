@@ -1,0 +1,336 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  "/auth/login":
+    post:
+      summary: login
+      tags:
+      - Auth
+      parameters: []
+      responses:
+        '200':
+          description: login riuscito, restituisce token e utente
+        '401':
+          description: credenziali non valide
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required:
+              - email
+              - password
+  "/auth/logout":
+    post:
+      summary: logout
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '204':
+          description: logout eseguito
+  "/auth/me":
+    get:
+      summary: utente corrente
+      tags:
+      - Auth
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: dati utente
+        '401':
+          description: non autenticato
+  "/cart/items":
+    post:
+      summary: aggiunge un prodotto al carrello
+      tags:
+      - Cart
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '201':
+          description: prodotto aggiunto
+        '422':
+          description: quantità non valida
+        '401':
+          description: non autenticato
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                quantity:
+                  type: integer
+              required:
+              - product_id
+              - quantity
+  "/cart/items/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: aggiorna la quantità
+      tags:
+      - Cart
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: quantità aggiornata
+        '422':
+          description: quantità non valida
+        '404':
+          description: riga non trovata
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+              required:
+              - quantity
+    delete:
+      summary: rimuove la riga dal carrello
+      tags:
+      - Cart
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: riga rimossa, restituisce il carrello
+  "/cart":
+    get:
+      summary: mostra il carrello
+      tags:
+      - Cart
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful
+        '401':
+          description: non autenticato
+  "/orders":
+    get:
+      summary: elenco ordini dell'utente
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful
+    post:
+      summary: crea un ordine dal carrello
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '201':
+          description: ordine creato
+        '422':
+          description: carrello vuoto o dati non validi
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shipping_address:
+                  type: string
+                city:
+                  type: string
+                postal_code:
+                  type: string
+              required:
+              - shipping_address
+              - city
+              - postal_code
+  "/products":
+    get:
+      summary: elenco prodotti
+      tags:
+      - Products
+      parameters:
+      - name: tag
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful
+    post:
+      summary: crea un prodotto (admin)
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '201':
+          description: prodotto creato
+        '422':
+          description: dati non validi
+        '403':
+          description: utente non admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                tags:
+                  type: array
+                  items:
+                    type: string
+              required:
+              - title
+              - price
+  "/products/{id}":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: dettaglio prodotto
+      tags:
+      - Products
+      responses:
+        '200':
+          description: prodotto trovato
+        '404':
+          description: prodotto non trovato
+    patch:
+      summary: aggiorna un prodotto (admin)
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: prodotto aggiornato
+        '404':
+          description: prodotto non trovato
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                tags:
+                  type: array
+                  items:
+                    type: string
+    delete:
+      summary: elimina un prodotto (admin)
+      tags:
+      - Products
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '204':
+          description: prodotto eliminato
+        '403':
+          description: utente non admin
+servers:
+- url: http://localhost:3000
+  description: server di sviluppo

@@ -1,0 +1,17 @@
+<ng-container [ngSwitch]="state?.status">
+  <section *ngSwitchCase="'loading'" class="http-state-loading">
+    <mat-progress-spinner mode="indeterminate" aria-label="Caricamento dati"></mat-progress-spinner>
+  </section>
+
+  <mat-card *ngSwitchCase="'error'" class="http-state-error" aria-live="polite">
+    <mat-card-title>Errore</mat-card-title>
+    <mat-card-content>
+      <p>{{ $any(state).message }}</p>
+      <button mat-button (click)="onRetry()">Riprova</button>
+    </mat-card-content>
+  </mat-card>
+
+  <ng-container *ngSwitchDefault>
+    <ng-content></ng-content>
+  </ng-container>
+</ng-container>

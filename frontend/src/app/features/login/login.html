@@ -1,0 +1,32 @@
+<section class="login-page">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Accedi</mat-card-title>
+    </mat-card-header>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <mat-card-content>
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" type="password" />
+        </mat-form-field>
+
+        <p *ngIf="error()" class="login-error" style="color: red;" role="alert">{{ error() }}</p>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Accesso in corso...' : 'Accedi' }}
+        </button>
+        <p class="register-link" style="margin-left: 10px;">
+          Non hai un account? <a routerLink="/register">Registrati</a>
+        </p>
+      </mat-card-actions>
+    </form>
+  </mat-card>
+</section>

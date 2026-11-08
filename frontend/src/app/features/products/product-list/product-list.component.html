@@ -1,0 +1,37 @@
+<section>
+  <div class="toolbar">
+    <h2>Prodotti</h2>
+
+    @if (isAdmin()) {
+      <a mat-raised-button color="primary" routerLink="/products/new">
+        <mat-icon>add_shopping_cart</mat-icon>
+        Aggiungi prodotto
+      </a>
+    }
+  </div>
+
+  <form class="filters" (submit)="$event.preventDefault()">
+    <mat-form-field appearance="outline">
+      <mat-label>Titolo</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        type="search"
+        name="title"
+        placeholder="Cerca per titolo"
+        [(ngModel)]="filters.title"
+        (ngModelChange)="applyFilters()"
+      />
+    </mat-form-field>
+  </form>
+
+  @if (state$ | async; as state) {
+    <app-http-state-card [state]="state" (retry)="reload()">
+      <ul class="grid">
+        <li *ngFor="let p of ($any(state).data ?? []); trackBy: trackById">
+          <app-product-card [product]="p" (add)="onAdd($event)"></app-product-card>
+        </li>
+      </ul>
+    </app-http-state-card>
+  }
+</section>
