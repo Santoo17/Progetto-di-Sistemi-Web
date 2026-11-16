@@ -1,114 +1,130 @@
-require "swagger_helper"
+require 'rails_helper'
+RSpec.describe "Products", type: :request do
+    let(:admin)    { User.create!(name: "Admin", email: "admin@test.it", password: "password123", role: :admin) }
+    let(:customer) { User.create!(name: "Customer", email: "customer@test.it", password: "password123", role: :user) }
+    let(:admin_headers) { { "Authorization" => "Bearer #{JsonWebToken.encode(user_id: admin.id)}" } }
+    let(:customer_headers) { { "Authorization" => "Bearer #{JsonWebToken.encode(user_id: customer.id)}" } }
 
-RSpec.describe "products", type: :request do
-  let(:admin)    { User.create!(name: "Admin", email: "admin@example.com", password: "password123", role: :admin) }
-  let(:customer) { User.create!(name: "Cliente", email: "cliente@example.com", password: "password123") }
-  let(:product)  { Product.create!(title: "Cuffie", price: 49.90, tags: ["audio"]) }
-  let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: admin.id)}" }
+    describe "GET /products" do
+        it "restituisce tutti i prodotti" do
+            Product.create!(title: "Cuffie", price: 49.90)
+            Product.create!(title: "Mouse", price: 29.90)
 
-  path "/products" do
-    get("elenco prodotti") do
-      tags "Products"
-      produces "application/json"
-      parameter name: :tag, in: :query, type: :string, required: false
-      parameter name: :q, in: :query, type: :string, required: false
+            get "/products", headers: admin_headers, as: :json
 
-      response(200, "successful") do
-        before { product }
-        run_test!
-      end
+            expect(response).to have_http_status(:ok)
+            body = JSON.parse(response.body)
+            expect(body.size).to eq(2)
+        end
     end
 
-    post("crea un prodotto (admin)") do
-      tags "Products"
-      security [{ bearerAuth: [] }]
-      consumes "application/json"
-      produces "application/json"
-      parameter name: :Authorization, in: :header, type: :string
-      parameter name: :body, in: :body, schema: {
-        type: :object,
-        properties: {
-          title: { type: :string },
-          description: { type: :string },
-          price: { type: :number },
-          tags: { type: :array, items: { type: :string } }
-        },
-        required: %w[title price]
-      }
+    describe "POST /products" do
+        let(:valid_params) { { title: "Tastiera", price: 59.90 } }
 
-      response(201, "prodotto creato") do
-        let(:body) { { title: "Cuffie", price: 49.9, tags: ["audio"] } }
-        run_test!
-      end
+        context "utente admin" do
+            it "crea un prodotto con successo" do
+                expect { post "/products", params: valid_params, headers: admin_headers, as: :json
+                }.to change { Product.count }.by(1)
 
-      response(422, "dati non validi") do
-        let(:body) { { title: "", price: -1 } }
-        run_test!
-      end
+                expect(response).to have_http_status(:created)
+                body = JSON.parse(response.body)
+                expect(body["title"]).to eq("Tastiera")
+                expect(body["price"]).to eq(59.9)
+            end
+        end
 
-      response(403, "utente non admin") do
-        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: customer.id)}" }
-        let(:body) { { title: "Cuffie", price: 49.9 } }
-        run_test!
-      end
-    end
-  end
+        context "utente non admin" do
+            it "non permette la creazione del prodotto" do
+                expect { post "/products", params: valid_params, headers: customer_headers, as: :json
+                }.not_to change { Product.count }
 
-  path "/products/{id}" do
-    parameter name: :id, in: :path, type: :integer
-    let(:id) { product.id }
+                expect(response).to have_http_status(:forbidden)
+                body = JSON.parse(response.body)
+                expect(body["error"]).to eq("Accesso negato")
+            end
+        end
 
-    get("dettaglio prodotto") do
-      tags "Products"
-      produces "application/json"
+        context "utente non autenticato" do
+            it "non permette la creazione del prodotto" do
+                expect { post "/products", params: valid_params, as: :json
+                }.not_to change { Product.count }
 
-      response(200, "prodotto trovato") { run_test! }
-
-      response(404, "prodotto non trovato") do
-        let(:id) { 0 }
-        run_test!
-      end
+                expect(response).to have_http_status(:unauthorized)
+                body = JSON.parse(response.body)
+                expect(body["error"]).to eq("Token non valido o scaduto")
+            end
+        end
     end
 
-    patch("aggiorna un prodotto (admin)") do
-      tags "Products"
-      security [{ bearerAuth: [] }]
-      consumes "application/json"
-      produces "application/json"
-      parameter name: :Authorization, in: :header, type: :string
-      parameter name: :body, in: :body, schema: {
-        type: :object,
-        properties: {
-          title: { type: :string },
-          description: { type: :string },
-          price: { type: :number },
-          tags: { type: :array, items: { type: :string } }
-        }
-      }
+    describe "DELETE /products/:id" do
+        let!(:product) { Product.create!(title: "Cuffie", price: 49.90) }
 
-      response(200, "prodotto aggiornato") do
-        let(:body) { { title: "Cuffie Pro", price: 59.9 } }
-        run_test!
-      end
+        context "utente admin" do
+            it "elimina un prodotto con successo" do
+                expect { delete "/products/#{product.id}", headers: admin_headers, as: :json
+                }.to change { Product.count }.by(-1)
 
-      response(404, "prodotto non trovato") do
-        let(:id) { 0 }
-        let(:body) { { title: "Cuffie Pro" } }
-        run_test!
-      end
+                expect(response).to have_http_status(:no_content)
+            end
+        end
+
+        context "utente non admin" do
+            it "non permette l'eliminazione del prodotto" do
+                expect { delete "/products/#{product.id}", headers: customer_headers, as: :json
+                }.not_to change { Product.count }
+
+                expect(response).to have_http_status(:forbidden)
+                body = JSON.parse(response.body)
+                expect(body["error"]).to eq("Accesso negato")
+            end
+        end
+
+        context "utente non autenticato" do
+            it "non permette l'eliminazione del prodotto" do
+                expect { delete "/products/#{product.id}", as: :json
+                }.not_to change { Product.count }
+
+                expect(response).to have_http_status(:unauthorized)
+                body = JSON.parse(response.body)
+                expect(body["error"]).to eq("Token non valido o scaduto")
+            end
+        end
     end
 
-    delete("elimina un prodotto (admin)") do
-      tags "Products"
-      security [{ bearerAuth: [] }]
-      parameter name: :Authorization, in: :header, type: :string
+    describe "PUT /products/:id" do
+        let!(:product) { Product.create!(title: "Cuffie", price: 49.90) }
+        let(:valid_params) { { title: "Cuffie aggiornate", price: 59.90 } }
 
-      response(204, "prodotto eliminato") { run_test! }
+        context "utente admin" do
+            it "aggiorna un prodotto con successo" do
+                put "/products/#{product.id}", params: valid_params, headers: admin_headers, as: :json
 
-      response(403, "utente non admin") do
-        let(:Authorization) { "Bearer #{JsonWebToken.encode(user_id: customer.id)}" }
-        run_test!
-      end
+                expect(response).to have_http_status(:ok)
+                body = JSON.parse(response.body)
+                expect(body["title"]).to eq("Cuffie aggiornate")
+                expect(body["price"]).to eq(59.9)
+            end
+        end
+
+        context "utente non admin" do
+            it "non permette l'aggiornamento del prodotto" do
+                put "/products/#{product.id}", params: valid_params, headers: customer_headers, as: :json
+
+                expect(response).to have_http_status(:forbidden)
+                body = JSON.parse(response.body)
+                expect(body["error"]).to eq("Accesso negato")
+            end
+        end
+
+        context "utente non autenticato" do
+            it "non permette l'aggiornamento del prodotto" do
+                put "/products/#{product.id}", params: valid_params, as: :json
+
+                expect(response).to have_http_status(:unauthorized)
+                body = JSON.parse(response.body)
+                expect(body["error"]).to eq("Token non valido o scaduto")
+            end
+        end
     end
-  end
+
 end

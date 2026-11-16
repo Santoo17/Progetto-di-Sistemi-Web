@@ -1,7 +1,7 @@
 ---
 openapi: 3.0.1
 info:
-  title: API V1
+  title: Shop API
   version: v1
 components:
   securitySchemes:
@@ -211,6 +211,49 @@ paths:
               - shipping_address
               - city
               - postal_code
+  "/orders/{id}/status":
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    patch:
+      summary: aggiorna lo stato di un ordine (solo admin)
+      tags:
+      - Orders
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: Authorization
+        in: header
+        schema:
+          type: string
+      responses:
+        '200':
+          description: stato aggiornato
+        '422':
+          description: transizione non consentita
+        '403':
+          description: utente non admin
+        '404':
+          description: ordine non trovato
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - pending
+                  - paid
+                  - shipped
+                  - completed
+                  - cancelled
+              required:
+              - status
   "/products":
     get:
       summary: elenco prodotti

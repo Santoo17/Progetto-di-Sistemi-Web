@@ -14,11 +14,16 @@ Rails.application.routes.draw do
     resources :items, controller: "cart_items", only: %i[create update destroy]
   end
 
-  resources :orders, only: [:index, :show, :create]
+  resources :orders, only: [:index, :show, :create] do
+    member do
+      patch :status, action: :statusUpdate
+    end
+  end 
 
   post "auth/login", to: "auth#login"
   post "auth/logout", to: "auth#logout"
   get "auth/me", to: "auth#me"
+  post "auth/register", to: "auth#register"
 
   # Defines the root path route ("/")
   # root "posts#index"
