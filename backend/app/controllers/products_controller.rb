@@ -1,7 +1,8 @@
 class ProductsController < ApplicationController
-  before_action :set_product, only: [:show, :update, :destroy]
   before_action :authenticate_user!, only: [:create, :update, :destroy]
   before_action :require_admin!, only: [:create, :update, :destroy]
+  before_action :set_product, only: [:show, :update, :destroy]
+
   
   def index
     products = Product.with_attached_image

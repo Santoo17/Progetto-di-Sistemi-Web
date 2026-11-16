@@ -1,14 +1,20 @@
 class OrdersController < ApplicationController
   before_action :authenticate_user!
+  before_action :require_admin!, only: [:statusUpdate]
+  before_action :set_order, only: [:show, :statusUpdate]
 
   def index
-    orders = current_user.orders.includes(order_items: :product).order(created_at: :desc)
+    if current_user.admin?
+      orders = Order.all 
+    else
+      orders = current_user.orders.includes(order_items: :product).order(created_at: :desc)
+    end
     render json: orders.map { |order| order_json(order) }
     
   end
 
   def show
-    render json: order_json(current_user.orders.find(params[:id]))
+    render json: order_json(@order)
   end
 
   def create
@@ -39,9 +45,27 @@ class OrdersController < ApplicationController
     rescue ActiveRecord::RecordInvalid => e
       render json: { errors: e.record.errors.full_messages }, status: :unprocessable_content
     end
+  
 
-    private
-    def order_params
-      params.require(:order).permit(:shipping_address, :city, :postal_code)
+  def statusUpdate
+    unless @order.status_transition_allowed?(params[:status])
+      render json: { error: "Transizione di stato non consentita" }, status: :unprocessable_content
+      return
     end
+    if @order.update(status: params[:status])
+      render json: order_json(@order)
+    else
+      render json: { errors: @order.errors.full_messages }, status: :unprocessable_content
+    end
+  end
+
+
+  private
+  def order_params
+    params.require(:order).permit(:shipping_address, :city, :postal_code, :status)
+  end
+  def set_order
+    @order = current_user.admin? ? Order.find(params[:id]) : current_user.orders.find(params[:id])
+  end
 end
+

@@ -1,4 +1,10 @@
 class ApplicationController < ActionController::API
+
+    rescue_from StandardError do |e|
+        Rails.logger.error(e.full_message)
+        render json: { error: "Errore interno del server" }, status: :internal_server_error
+    end
+    
     rescue_from ActiveRecord::RecordNotFound do |e|
         render json: { error: "Risorsa non trovata" }, status: :not_found
     end
@@ -19,9 +25,14 @@ class ApplicationController < ActionController::API
     def authenticate_user!
         token = request.headers["Authorization"]&.split(" ")&.last
         payload = JsonWebToken.decode(token) 
-        @current_user = User.find(payload[:user_id]) 
-    rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-        render json: { error: "Token non valido o utente non trovato" }, status: :unauthorized
+        @current_user = User.find_by(id: payload[:user_id]) if payload
+        render json: { error: "Token non valido o scaduto" }, status: :unauthorized unless @current_user
+    rescue JWT::DecodeError
+        render json: { error: "Token non valido o scaduto" }, status: :unauthorized
+    end
+
+    def require_admin!
+        render json: { error: "Accesso negato" }, status: :forbidden unless current_user.admin?
     end
 
     def current_cart
@@ -40,10 +51,10 @@ class ApplicationController < ActionController::API
                     thumbnail: (url_for(item.product.image) if item.product.image.attached?),
                     quantity: item.quantity,
                     unit_price: item.unit_price.to_f,
-                    subtotal: (item.quantity * item.unit_price).to_f
+                    subtotal: item.subtotal
                 }
             end,
-            total: items.sum { |item| item.quantity * item.unit_price }.to_f
+            total: cart.total
             
         }
     end
@@ -51,8 +62,9 @@ class ApplicationController < ActionController::API
     def order_json(order)
         {
             id: order.id,
+            user_id: order.user_id,
             status: order.status,
-            total: order.total.to_f,
+            total: order.calculate_total,
             created_at: order.created_at,
             shipping_address: order.shipping_address,
             city: order.city,
@@ -64,13 +76,11 @@ class ApplicationController < ActionController::API
                     title: item.product.title,
                     quantity: item.quantity,
                     unit_price: item.unit_price.to_f,
-                    subtotal: (item.quantity * item.unit_price).to_f
+                    subtotal: item.subtotal
                 }
             end
         }
     end
 
-    def require_admin!
-        render json: { error: "Accesso negato" }, status: :forbidden unless current_user.admin?
-    end
+
 end
