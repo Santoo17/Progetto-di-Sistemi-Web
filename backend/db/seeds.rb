@@ -9,6 +9,16 @@ User.find_or_create_by!(email: "client@shop.it") do |user|
     user.password = "password123"
 end
 
-Product.find_or_create_by!(name: "Product 1") do |product|
-    product.description = "Test product 1"
-    product.price = 10.0
+Product.find_or_create_by!(title: "Product 1") do |product|
+    product.title = "Taglia erba 1"
+    product.description = "Taglia erba elettrico con batteria al litio, ideale per giardini di piccole dimensioni."
+    product.price = 39.00
+    product.tags = ["Casa", "Giardino"]
+end
+
+Product.find_or_create_by!(title: "Product 2") do |product|
+    product.title = "Scarpa da trekking"
+    product.description = "Scarpa da trekking per il terreno difficile, con suola antiscivolo e cintura regolabile."
+    product.price = 89.00
+    product.tags = ["Abbigliamento", "Sport"]
+end

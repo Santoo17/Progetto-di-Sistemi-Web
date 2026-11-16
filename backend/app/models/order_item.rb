@@ -4,4 +4,8 @@ class OrderItem < ApplicationRecord
 
   validates :quantity, numericality: { only_integer: true, greater_than: 0 }
   validates :unit_price, numericality: { greater_than: 0 }
+
+  def subtotal
+    quantity * unit_price.to_f
+  end
 end
