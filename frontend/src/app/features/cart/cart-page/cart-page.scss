@@ -1,13 +1,25 @@
 .cart-total {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   gap: 12px;
   margin-top: 16px;
 
   button {
-    align-self: center;
+  background-color: #5bde82;
+  color: #181717;
   }
+  .back-button {
+  background-color: #388ab9;
+  color: #181717;
+}
+}
+
+
+
+.back-button {
+  background-color: #388ab9;
+  color: #181717;
 }
 
 .cart-item {
