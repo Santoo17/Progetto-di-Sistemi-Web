@@ -1,25 +1,25 @@
-export interface CheckoutItem {
-  product_id: number;
-  quantita: number;
-}
-
 export interface CheckoutRequest {
-  items: CheckoutItem[];
-  codice_sconto?: string | null;
+  shipping_address: string;
+  city: string;
+  postal_code: string;
 }
 
 export interface OrderItemRead {
   id: number;
   product_id: number;
-  quantita: number;
-  prezzo_unitario: number;
+  title: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
 }
 
 export interface OrderRead {
   id: number;
-  user_id: number;
-  totale: number;
-  stato: string;
-  codice_sconto: string | null;
+  status: string;
+  total: number;
+  created_at: string;
+  shipping_address: string;
+  city: string;
+  postal_code: string;
   items: OrderItemRead[];
 }

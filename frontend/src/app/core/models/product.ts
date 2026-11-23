@@ -1,15 +1,25 @@
 export interface Product {
   id: number;
-  nome: string;
-  descrizione: string | null;
-  prezzo: number;
-  giacenza: number;
-  valutazione_media: number | null;
+  title: string;
+  description: string | null;
+  price: number;
+  tags: string[];
+  thumbnail: string | null;
+  createdAt: string;
 }
 
 export interface ProductCreate {
-  nome: string;
-  descrizione: string | null;
-  prezzo: number;
-  giacenza: number;
+  title: string;
+  description: string | null;
+  price: number;
+  tags: string[];
+  thumbnail: string | null;
+}
+
+export interface ProductUpdate {
+  title?: string;
+  description?: string | null;
+  price?: number;
+  tags?: string[];
+  thumbnail?: string | null;
 }
