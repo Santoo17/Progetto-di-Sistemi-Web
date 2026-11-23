@@ -1,17 +1,23 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgIf } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../core/services/auth';
 
+const passwordsMatch = (group: AbstractControl): ValidationErrors | null => {
+  const password = group.get('password')?.value;
+  const confirm = group.get('passwordConfirmation')?.value;
+  return password === confirm ? null : { mismatch: true };
+};
+
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, NgIf, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
   templateUrl: './register.html',
   styleUrl: './register.scss'
 })
@@ -23,13 +29,15 @@ export class Register {
   error: string | null = null;
   loading = false;
 
-  readonly form = this.fb.group({
-    nome: ['', Validators.required],
-    cognome: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
-    indirizzo: ['']
-  });
+  readonly form = this.fb.group(
+    {
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      passwordConfirmation: ['', Validators.required]
+    },
+    { validators: passwordsMatch }
+  );
 
   onSubmit(): void {
     if (this.form.invalid) {
@@ -43,27 +51,18 @@ export class Register {
     const value = this.form.getRawValue();
 
     this.auth.register({
-      nome: value.nome!,
-      cognome: value.cognome!,
+      name: value.name!,
       email: value.email!,
       password: value.password!,
-      indirizzo: value.indirizzo || null
+      password_confirmation: value.passwordConfirmation!
     }).subscribe({
-      next: () => {
-        // Dopo la registrazione, esegui subito il login automatico
-        this.auth.login(value.email!, value.password!).subscribe({
-          next: () => {
-            this.router.navigate(['/products']);
-          },
-          error: () => {
-            this.loading = false;
-            this.router.navigate(['/login']); // fallback: vai al login manuale
-          }
-        });
-      },
-      error: (err) => {
+      next: () => this.router.navigate(['/products']),
+      error: (err: HttpErrorResponse) => {
         this.loading = false;
-        this.error = err?.error?.detail || 'Registrazione fallita. Riprova.';
+        const body = err.error;
+        this.error = Array.isArray(body?.errors)
+          ? body.errors.join(' ')
+          : 'Registrazione fallita. Riprova.';
       }
     });
   }

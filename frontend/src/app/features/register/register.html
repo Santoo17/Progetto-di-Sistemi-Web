@@ -8,30 +8,40 @@
       <mat-card-content>
         <mat-form-field appearance="outline">
           <mat-label>Nome</mat-label>
-          <input matInput formControlName="nome" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Cognome</mat-label>
-          <input matInput formControlName="cognome" />
+          <input matInput formControlName="name" />
+          <mat-error>Il nome è obbligatorio</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" />
+          <mat-error>Inserisci un'email valida</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Password</mat-label>
           <input matInput formControlName="password" type="password" />
+          <mat-error>La password deve avere almeno 8 caratteri</mat-error>
         </mat-form-field>
-
+        
         <mat-form-field appearance="outline">
-          <mat-label>Indirizzo (opzionale)</mat-label>
-          <input matInput formControlName="indirizzo" />
+          <mat-label>Conferma password</mat-label>
+          <input matInput formControlName="passwordConfirmation" type="password" />
+          @if (form.controls.passwordConfirmation.hasError('required')) {
+            <mat-error>Conferma la password</mat-error>
+          }
         </mat-form-field>
-
-        <p *ngIf="error" class="register-error" role="alert">{{ error }}</p>
+        @if (form.hasError('mismatch') && form.controls.passwordConfirmation.touched) {
+          <p class="register-error" role="alert" style="color: red;">
+            Le password non coincidono.
+          </p>
+        }
+      
+        @if(error) {
+          <p class="register-error" role="alert" style="color: red;">
+            {{ error }}
+          </p>
+        }
       </mat-card-content>
 
       <mat-card-actions>

@@ -4,28 +4,46 @@
       <mat-card-title>Accedi</mat-card-title>
     </mat-card-header>
 
+    @if (sessionExpired) {
+      <p class="login-error" style="color: red; margin-left: 10px;" role="alert">La tua sessione è scaduta. Effettua nuovamente l'accesso.</p>
+    }
+
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <mat-card-content>
         <mat-form-field appearance="outline">
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" />
+          @if (hasError('email','required')) {
+            <mat-error>L'email è obbligatoria.</mat-error>
+          }
+          @if (hasError('email','email')) {
+            <mat-error>Inserisci un'email valida.</mat-error>
+          }
         </mat-form-field>
-
+      
         <mat-form-field appearance="outline">
           <mat-label>Password</mat-label>
           <input matInput formControlName="password" type="password" />
+          @if (hasError('password','required')) {
+            <mat-error>La password è obbligatoria.</mat-error>
+          }
         </mat-form-field>
-
-        <p *ngIf="error()" class="login-error" style="color: red;" role="alert">{{ error() }}</p>
+      
+        @if (error()) {
+          <p class="login-error" style="color: red;" role="alert">{{ error() }}</p>
+        }
       </mat-card-content>
+
 
       <mat-card-actions>
         <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
           {{ loading() ? 'Accesso in corso...' : 'Accedi' }}
         </button>
-        <p class="register-link" style="margin-left: 10px;">
-          Non hai un account? <a routerLink="/register">Registrati</a>
-        </p>
+        <p style="margin-left: 10px;"> Non hai ancora un account?</p>
+        <button class="register-button" mat-raised-button color="accent" routerLink="/register">
+          <p class="button-text">Registrati</p>
+        </button>
+
       </mat-card-actions>
     </form>
   </mat-card>
