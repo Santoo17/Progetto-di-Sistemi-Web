@@ -1,5 +1,5 @@
 import { Component, input, inject } from '@angular/core';
-import { TitleCasePipe, NgIf, AsyncPipe } from '@angular/common';
+import { TitleCasePipe, AsyncPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,11 +9,11 @@ import { MatMenuModule } from '@angular/material/menu';
 import { Observable, map } from 'rxjs';
 import { CartService } from '../../core/services/cart';
 import { AuthService } from '../../core/services/auth';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-header',
   imports: [
-    NgIf,
     AsyncPipe,
     TitleCasePipe,
     RouterLink,
@@ -29,6 +29,7 @@ import { AuthService } from '../../core/services/auth';
 export class Header {
   title = input<string>('Shop');
   showIcon = input<boolean>(true);
+  snackbar = inject(MatSnackBar);
 
   private cart = inject(CartService);
   private router = inject(Router);
@@ -40,7 +41,9 @@ export class Header {
 
   toggleLogin(): void {
     if (this.auth.isLoggedIn()) {
-      this.auth.logout();
+      if (confirm('Vuoi davvero uscire?')) {
+        this.auth.logout();
+      }
     } else {
       this.router.navigate(['/login']);
     }
@@ -50,6 +53,7 @@ export class Header {
     if (this.auth.isLoggedIn()) {
       this.router.navigate(['/orders']);
     } else {
+      this.snackbar.open('Devi essere loggato per visualizzare gli ordini', 'Chiudi', { duration: 2500 });
       this.router.navigate(['/login']);
     }
   }

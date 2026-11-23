@@ -1,14 +1,13 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { HttpState } from '../http-state';
+import { HttpState }from '../../../core/models/http-state-cards';
 
 @Component({
   selector: 'app-http-state-card',
   standalone: true,
-  imports: [NgSwitch, NgSwitchCase, NgSwitchDefault, MatProgressSpinnerModule, MatCardModule, MatButtonModule],
+  imports: [MatProgressSpinnerModule, MatCardModule, MatButtonModule],
   templateUrl: './http-state-card.html'
 })
 export class HttpStateCard {

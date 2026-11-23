@@ -1,45 +1,54 @@
 <mat-toolbar color="primary" class="app-toolbar">
-  <button
-    mat-icon-button
-    class="app-toolbar__menu"
-    *ngIf="showIcon()"
-    aria-label="Apri menu"
-    [matMenuTriggerFor]="mainMenu"
-  >
-    <mat-icon>menu</mat-icon>
-  </button>
+  @if(showIcon()){
+    <button
+      mat-icon-button
+      class="app-toolbar__menu"
+      aria-label="Apri menu"
+      [matMenuTriggerFor]="mainMenu"
+    >
+      <mat-icon>menu</mat-icon>
+    </button>
+}
 
   <mat-menu #mainMenu="matMenu">
     <a mat-menu-item routerLink="/products">
       <mat-icon>storefront</mat-icon>
       <span>Prodotti</span>
     </a>
-    <a mat-menu-item routerLink="/cart">
-      <mat-icon>shopping_cart</mat-icon>
-      <span>Carrello</span>
-    </a>
-    <a mat-menu-item routerLink="/checkout">
-      <mat-icon>payment</mat-icon>
-      <span>Checkout</span>
-    </a>
+    @if (auth.isLoggedIn()) {
+      <a mat-menu-item routerLink="/cart">
+        <mat-icon>shopping_cart</mat-icon>
+        <span>Carrello</span>
+      </a>
+      <a mat-menu-item routerLink="/checkout">
+        <mat-icon>payment</mat-icon>
+        <span>Checkout</span>
+      </a>
+    }
   </mat-menu>
 
   <span class="app-title">{{ title() | titlecase }}</span>
 
   <span class="spacer"></span>
+  @if (auth.isLoggedIn()) {
+    <button mat-icon-button routerLink="/cart" aria-label="Vai al carrello">
+      <mat-icon
+        [matBadge]="cartCount$ | async"
+        [matBadgeHidden]="!(cartCount$ | async)"
+        matBadgeSize="small"
+        matBadgeColor="warn">
+        shopping_cart
+      </mat-icon>
+    </button>
+  }
 
-  <button mat-icon-button routerLink="/cart" aria-label="Vai al carrello">
-    <mat-icon [matBadge]="(cartCount$ | async) || 0" matBadgeSize="small" matBadgeColor="accent">
-      shopping_cart
-    </mat-icon>
-  </button>
-
-  <button mat-button (click)="toggleLogin()">
+  <button mat-button (click)="toggleLogin()" >
     {{ auth.isLoggedIn() ? 'Logout' : 'Login' }}
   </button>
-  <button mat-button (click)="toggleOrders()">
-    Ordini
-  </button>
-
+  @if (auth.isLoggedIn()) {
+    <button mat-button (click)="toggleOrders()">
+      Ordini
+    </button>
+  }
 
 </mat-toolbar>
