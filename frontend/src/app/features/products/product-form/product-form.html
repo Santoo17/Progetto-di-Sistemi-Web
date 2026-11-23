@@ -1,26 +1,26 @@
 <section class="product-form-page">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>Aggiungi prodotto</mat-card-title>
+      <mat-card-title>{{ isEditMode ? 'Modifica prodotto' : 'Aggiungi prodotto' }}</mat-card-title>
     </mat-card-header>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <mat-card-content>
         <mat-form-field appearance="outline">
-          <mat-label>Nome</mat-label>
-          <input matInput formControlName="nome" />
-          <mat-error>Il nome è obbligatorio</mat-error>
+          <mat-label>Titolo</mat-label>
+          <input matInput formControlName="title" />
+          <mat-error>Il titolo è obbligatorio</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Descrizione</mat-label>
-          <textarea matInput rows="3" formControlName="descrizione"></textarea>
+          <textarea matInput rows="3" formControlName="description"></textarea>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>Prezzo</mat-label>
-          <input matInput type="number" step="0.01" min="0.01" formControlName="prezzo" />
-          @if (form.controls.prezzo.hasError('required')) {
+          <input matInput type="number" step="0.01" min="0.01" formControlName="price" />
+          @if (form.controls.price.hasError('required')) {
             <mat-error>Il prezzo è obbligatorio</mat-error>
           } @else {
             <mat-error>Il prezzo deve essere maggiore di zero</mat-error>
@@ -28,26 +28,31 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Giacenza</mat-label>
-          <input matInput type="number" step="1" min="0" formControlName="giacenza" />
-          @if (form.controls.giacenza.hasError('required')) {
-            <mat-error>La giacenza è obbligatoria</mat-error>
-          } @else if (form.controls.giacenza.hasError('integer')) {
-            <mat-error>Inserisci un numero intero</mat-error>
-          } @else {
-            <mat-error>La giacenza non può essere negativa</mat-error>
-          }
+          <mat-label>Tag (separati da virgola)</mat-label>
+          <input matInput formControlName="tags" placeholder="es. audio, cuffie" />
         </mat-form-field>
 
-      <mat-card-actions>
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading">
-          {{ loading ? 'Salvataggio...' : 'Salva' }}
-        </button>
-        <a mat-button routerLink="/products">Annulla</a>
-      </mat-card-actions>
-     @if (error) {
-        <p class="form-error" role="alert">{{ error }}</p>
-    }
+        <div class="image-field">
+          <label for="image">Immagine (max 5 MB)</label>
+          <input id="image" type="file" accept="image/jpeg,image/png,image/webp"
+                 (change)="onFileSelected($event)" />
+          
+        </div>
+
+
+        
+
+
+        <mat-card-actions>
+          <button mat-raised-button color="primary" type="submit" [disabled]="loading()">
+            {{ loading() ? 'Salvataggio...' : (isEditMode ? 'Salva modifiche' : 'Salva') }}
+          </button>
+          <a mat-raised-button color="primary" style="margin-left: 10px;" routerLink="/products">Annulla</a>
+        </mat-card-actions>
+
+        @if (error()) {
+          <p class="form-error" role="alert">{{ error() }}</p>
+        }
       </mat-card-content>
     </form>
   </mat-card>
