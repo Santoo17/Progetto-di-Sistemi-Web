@@ -1,51 +1,96 @@
 <section class="orders-container">
-  <h1>I miei ordini</h1>
+  
+  <div>
+    <h1>I miei ordini</h1>
+    <button class="back-button" mat-raised-button color="primary" routerLink="/products">
+      Torna al catalogo
+    </button>
+  </div>
 
-  <ng-container *ngIf="orders$ | async as orders; else loading">
-    
-    <!-- Stato vuoto -->
-    <div *ngIf="orders.length === 0" class="empty-orders">
-      <mat-icon class="empty-icon">shopping_bag</mat-icon>
-      <p>Non hai ancora effettuato alcun ordine.</p>
-      <a mat-flat-button color="primary" routerLink="/products">
-        Sfoglia il catalogo
-      </a>
-    </div>
+  @if (state$ | async; as state) {
+    <app-http-state-card [state]="state" (retry)="reload()">
 
-    <!-- Lista ordini (Accordion/Panelli) -->
-    <mat-accordion *ngIf="orders.length > 0" class="orders-accordion" multi="false">
-      <mat-expansion-panel *ngFor="let order of orders">
-        
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <strong>Ordine #{{ order.id }}</strong>
-          </mat-panel-title>
-          <mat-panel-description>
-            <span>Stato: {{ order.stato }}</span>
-          </mat-panel-description>
-          <mat-panel-description>
-            <span>Totale: {{ order.totale | currency:'EUR' }}</span>
-          </mat-panel-description>
-        </mat-expansion-panel-header>
+    @if (state.status === 'success') {
 
-        <!-- Dettaglio articoli dell'ordine -->
-        <div class="order-details">
-          <h3>Articoli acquistati</h3>
-          <ul class="items-list">
-            <li *ngFor="let item of order.items">
-              <span>Prodotto #{{ item.product_id }}</span>
-              <span>Quantità: {{ item.quantita }}</span>
-               <span>Prezzo unitario: {{ item.prezzo_unitario | currency:'EUR' }}</span>
-            </li>
-          </ul>
+      <form class="filters" (submit)="$event.preventDefault()">
+        <mat-form-field appearance="outline">
+          <mat-label>Stato</mat-label>
+          <mat-select name="status" [(ngModel)]="filters.status" (ngModelChange)="applyFilters()">
+            <mat-option value="">Tutti gli stati</mat-option>
+            @for (s of (statuses$ | async) ?? []; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Ordina per</mat-label>
+          <mat-select name="sort" [(ngModel)]="filters.sort" (ngModelChange)="applyFilters()">
+            <mat-option value=""> Nessun ordinamento</mat-option>
+            <mat-option value="date_desc">Data: più recenti</mat-option>
+            <mat-option value="date_asc">Data: più vecchi</mat-option>
+            <mat-option value="price_desc">Prezzo: decrescente</mat-option>
+            <mat-option value="price_asc">Prezzo: crescente</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+
+      <!-- Stato vuoto -->
+      @if (state.data.length === 0) {
+        <div class="empty-orders">
+          <mat-icon class="empty-icon">shopping_bag</mat-icon>
+          <p>Nessun ordine trovato.</p>
+          <a mat-flat-button color="primary" routerLink="/products">
+            Sfoglia il catalogo
+          </a>
         </div>
+      }
 
-      </mat-expansion-panel>
-    </mat-accordion>
+      <!-- Lista ordini -->
+      @else {
+        <mat-accordion class="orders-accordion" multi="false">
+          @for (order of state.data; track order.id) {
+            <mat-expansion-panel>
 
-  </ng-container>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <strong>Ordine #{{ order.id }}</strong>
+                </mat-panel-title>
+                <mat-panel-description>
+                  <span>Stato: {{ order.status }}</span>
+                </mat-panel-description>
+                <mat-panel-description>
+                  <span>Totale: {{ order.total | currency:'EUR' }}</span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
 
-  <ng-template #loading>
-    <p class="loading-state">Caricamento ordini in corso...</p>
-  </ng-template>
+              <div class="order-details">
+                <h3>Articoli acquistati</h3>
+                <ul class="items-list">
+                  @for (item of order.items; track item.id) {
+                    <li>
+                      <span>Prodotto: {{ item.title }}</span>
+                      <span>Quantità: {{ item.quantity }}</span>
+                      <span>Prezzo unitario: {{ item.unit_price | currency:'EUR' }}</span>
+                    </li>
+                  }
+                </ul>
+                <h3>Indirizzo di spedizione</h3>
+                <ul class="items-list">
+                  <li><span>Indirizzo: {{ order.shipping_address }}</span></li>
+                  <li><span>Città: {{ order.city }}</span></li>
+                  <li><span>CAP: {{ order.postal_code }}</span></li>
+                </ul>
+                <h3>Data effettiva dell'ordine</h3>
+                <p>{{ order.created_at | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+              </div>
+
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      }
+
+    }
+    </app-http-state-card>
+  }
 </section>

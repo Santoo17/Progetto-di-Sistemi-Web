@@ -8,6 +8,12 @@
     font-size: 1.5rem;
   }
 
+  .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
   .empty-orders {
     text-align: center;
     padding: 3rem 1rem;
@@ -53,6 +59,10 @@
   .order-details {
     padding-top: 1rem;
     border-top: 1px solid var(--mat-sys-outline-variant, #eee);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 
     h3 {
       font-size: 0.95rem;
@@ -63,10 +73,12 @@
     .items-list {
       list-style: none;
       padding: 0;
-      margin: 0;
+      margin: 0 0 0.5rem;
 
       li {
         display: flex;
+        flex-direction: column;
+        align-items: center;
         justify-content: space-between;
         padding: 0.4rem 0;
         border-bottom: 1px dashed var(--mat-sys-outline-variant, #f0f0f0);
@@ -84,3 +96,14 @@
     padding: 2rem;
   }
 }
+
+.back-button {
+  align-self: flex-end;
+  background-color: #5bde82;
+  color: #181717;
+  margin-bottom: 1.5rem;
+}
+
+
+
+

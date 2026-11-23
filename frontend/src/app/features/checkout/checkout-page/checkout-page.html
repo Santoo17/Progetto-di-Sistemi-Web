@@ -1,96 +1,99 @@
-<div class="order-success" *ngIf="orderSuccess" role="status" aria-live="polite">
-  <p>✅ Ordine confermato! Grazie per il tuo acquisto.</p>
-  <p *ngIf="lastOrder">
-    Totale pagato: <strong>{{ lastOrder.totale | currency:'EUR' }}</strong>
-  </p>
-</div>
 
-<section class="cart-summary" *ngIf="items$ | async as items">
-  <h2>Riepilogo carrello</h2>
-  <h3 class="balance" >il tuo saldo disponibile: <strong>{{ availableBalance$ | async | currency:'EUR' }}</strong></h3>
+@if (orderSuccess){
+  <div class="order-success" role="status" aria-live="polite">
+    <p>✅ Ordine confermato! Grazie per il tuo acquisto.</p>
+    @if (lastOrder) {
+      <p> 
+        Totale pagato: <strong>{{ lastOrder.total | currency:'EUR' }}</strong>
+      </p>
+    }
+  </div>
+}
 
-  <p *ngIf="items.length === 0">
-    Il carrello è vuoto. Aggiungi prodotti prima di procedere.
-  </p>
 
-  <ul *ngIf="items.length > 0">
-    <li *ngFor="let item of items">
-      {{ item.product.nome }} × {{ item.quantity }}
-      — {{ item.product.prezzo * item.quantity | currency:'EUR' }}
-    </li>
-  </ul>
+@if(items$ | async; as items ){
+  <section class="cart-summary" >
+    <h2>Riepilogo carrello</h2>
+    @if (hasError('privacy','required')) {
+      <p class="error-message" style="color: red;">
+        Devi accettare i termini e la privacy per procedere.
+      </p>
+    }
+  
+  @if (items.length === 0) {
+    <p style="color: red;">
+      Il carrello è vuoto. Aggiungi prodotti prima di procedere.
+    </p>
+  } @else {
+    <ul>
+      @for (item of items; track item.id) {
+        <li>
+          {{ item.product.title }} × {{ item.quantity }}
+          — {{ item.product.price * item.quantity | currency:'EUR' }}
+        </li>
+      }
+    </ul>
 
-  <p class="total" *ngIf="items.length > 0">
-    Totale: <strong>{{ total$ | async | currency:'EUR' }}</strong>
-  </p>
-</section>
+    <p class="total">
+      Totale: <strong>{{ total$ | async | currency:'EUR' }}</strong>
+    </p>
+  }
+  </section>
+}
 
 <form class="checkout-form" [formGroup]="form" (ngSubmit)="onSubmit()">
-
-  <div class="error-summary"
-       *ngIf="showSummary && form.invalid"
-       role="status"
-       aria-live="polite">
-    <p>Il form contiene errori. Controlla i campi evidenziati prima di procedere.</p>
-  </div>
-
   <section formGroupName="address">
     <h2>Indirizzo</h2>
     <mat-form-field appearance="outline">
       <mat-label>Via</mat-label>
       <input matInput formControlName="street" />
-      <mat-error *ngIf="hasError('address.street','required')">
-        La via è obbligatoria.
-      </mat-error>
+      @if (hasError('address.street','required')) {
+        <mat-error>La via è obbligatoria.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>Città</mat-label>
       <input matInput formControlName="city" />
-      <mat-error *ngIf="hasError('address.city','required')">
-        La città è obbligatoria.
-      </mat-error>
+      @if (hasError('address.city','required')) {
+        <mat-error>La città è obbligatoria.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
       <mat-label>CAP</mat-label>
       <input matInput formControlName="zip" />
-      <mat-error *ngIf="hasError('address.zip','required')">
-        Il CAP è obbligatorio.
-      </mat-error>
-      <mat-error *ngIf="hasError('address.zip','pattern')">
-        Il CAP deve essere di 5 cifre.
-      </mat-error>
+      @if (hasError('address.zip','required')) {
+        <mat-error>Il CAP è obbligatorio.</mat-error>
+      }
+      @if (hasError('address.zip','pattern')) {
+        <mat-error>Il CAP deve essere di 5 cifre.</mat-error>
+      }
     </mat-form-field>
   </section>
 
-  <section class="discount">
-    <h2>Codice sconto</h2>
-    <mat-form-field appearance="outline">
-      <mat-label>Codice sconto (opzionale)</mat-label>
-      <input matInput formControlName="discountCode" placeholder="es. save10" />
-    </mat-form-field>
-  </section>
 
   <mat-checkbox formControlName="privacy">
     Accetto termini e privacy
   </mat-checkbox>
-  <div *ngIf="hasError('privacy','required')" class="privacy-error">
-    Devi accettare i termini per procedere.
-  </div>
 
-  <button
+  <button class="confirm-order-button"
     mat-raised-button
-    color="primary"
     type="submit"
-    style="margin-left: 6px"
-    [disabled]="form.invalid || (items$ | async)?.length === 0 || loading()"
+    [disabled]=" (items$ | async)?.length === 0 || loading()"
   >
-    {{ loading() ? 'Invio in corso...' : 'Conferma ordine' }}
+     {{ loading() ? 'Invio in corso...' : 'Conferma ordine' }}
   </button>
 
-  <div class="order-error" *ngIf="orderError()" role="alert" aria-live="assertive">
-    <p>❌ {{ orderErrorMessage() }}</p>
-  </div>
-  
+      <div align="right" >
+      <button  class="back-button" mat-raised-button color="primary" routerLink="/products">
+          Torna al catalogo
+      </button>
+    </div>
+  @if (orderError()) {
+    <div class="order-error" role="alert" aria-live="assertive">
+      <p>❌ {{ orderErrorMessage() }}</p>
+    </div>
+  }
+
 </form>

@@ -1,31 +1,33 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
-import { AsyncPipe, CurrencyPipe, NgFor, NgIf } from '@angular/common';
-import { Observable, map, take } from 'rxjs';
-import { CartService, CartItem } from '../../../core/services/cart';
+import { AsyncPipe, CurrencyPipe } from '@angular/common';
+import { Observable, map } from 'rxjs';
+import { CartService } from '../../../core/services/cart';
+import { CartItem } from '../../../core/models/cart';
 import { OrderService } from '../../../core/services/order';
 import { CheckoutRequest, OrderRead } from '../../../core/models/order';
-import { UserService } from '../../../core/services/user';
+import { MatCardModule } from '@angular/material/card';
+
 
 @Component({
   selector: 'app-checkout-page',
   standalone: true,
   imports: [
+    RouterLink,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
     MatButtonModule,
+    MatCardModule,
     AsyncPipe,
-    CurrencyPipe,
-    NgFor,
-    NgIf
+    CurrencyPipe
   ],
   templateUrl: './checkout-page.html',
   styleUrl: './checkout-page.scss'
@@ -34,10 +36,8 @@ export class CheckoutPage {
   private fb = inject(FormBuilder);
   private cart = inject(CartService);
   private orderService = inject(OrderService);
-  private userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
- 
 
   loading = signal(false);
   orderError = signal(false);
@@ -50,10 +50,8 @@ export class CheckoutPage {
   readonly items$: Observable<CartItem[]> = this.cart.items$;
 
   readonly total$: Observable<number> = this.items$.pipe(
-    map(items => items.reduce((sum, i) => sum + i.product.prezzo * i.quantity, 0))
+    map(items => items.reduce((sum, i) => sum + i.product.price * i.quantity, 0))
   );
-  readonly availableBalance$: Observable<number> =
-  this.userService.getMe().pipe(map(u => u.saldo));
 
   readonly form = this.fb.group({
     address: this.fb.group({
@@ -62,8 +60,7 @@ export class CheckoutPage {
       zip: ['', [Validators.required, Validators.pattern(/^[0-9]{5}$/)]]
     }),
     shippingMethod: ['standard', Validators.required],
-    privacy: [false, Validators.requiredTrue],
-    discountCode: ['']
+    privacy: [false, Validators.requiredTrue]
   });
 
   getControl(path: string) {
@@ -99,37 +96,32 @@ export class CheckoutPage {
 
     const value = this.form.getRawValue();
 
-    this.items$.pipe(take(1)).subscribe(items => {
-      const request: CheckoutRequest = {
-        items: items.map(i => ({
-          product_id: i.product.id,
-          quantita: i.quantity
-        })),
-        codice_sconto: value.discountCode?.trim() || null
-      };
+    const request: CheckoutRequest = {
+      shipping_address: value.address.street!,
+      city: value.address.city!,
+      postal_code: value.address.zip!
+    };
 
-      this.orderService.checkout(request).subscribe({
-        next: () => {
-          this.loading.set(false);
-          this.cart.clear();
-          this.form.reset({ shippingMethod: 'standard', privacy: false });
-          this.snackBar.open('Ordine inviato con successo!', 'Chiudi', {
-            duration: 4000,
-            panelClass: ['success-snackbar']
-          });
-          this.router.navigate(['/products']);
-        },
-        error: (err) => {
-          this.loading.set(false);
-          this.orderError.set(true);
-          const detail = err?.error?.detail;
-          this.orderErrorMessage.set(
-            typeof detail === 'string'
-              ? detail
-              : 'Si è verificato un errore durante l\'invio dell\'ordine.'
-          );
-        }
-      });
+    this.orderService.checkout(request).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.cart.clear();
+        this.form.reset({ shippingMethod: 'standard', privacy: false });
+        this.snackBar.open('Ordine inviato con successo!', 'Chiudi', {
+          duration: 4000,
+          panelClass: ['success-snackbar']
+        });
+        this.router.navigate(['/orders']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.orderError.set(true);
+        const body = err?.error;
+        const message = Array.isArray(body?.errors) ? body.errors.join(' ') : body?.error;
+        this.orderErrorMessage.set(
+          message ?? "Si è verificato un errore durante l'invio dell'ordine."
+        );
+      }
     });
   }
 }
